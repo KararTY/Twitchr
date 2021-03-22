@@ -3,12 +3,14 @@
   "commands": [
     "./commands",
     "@adonisjs/core/build/commands",
-    "@adonisjs/lucid/build/commands"
+    "@adonisjs/lucid/build/commands",
+    "@adonisjs/repl/build/commands"
   ],
   "exceptionHandlerNamespace": "App/Exceptions/Handler",
   "aliases": {
     "App": "app",
     "Contracts": "contracts",
+    "Database": "database",
     "Config": "config"
   },
   "preloads": [
@@ -23,7 +25,6 @@
   ],
   "providers": [
     "./providers/AppProvider",
-    "@adonisjs/env",
     "@adonisjs/core",
     "@adonisjs/session",
     "@adonisjs/view",
@@ -34,8 +35,17 @@
   "metaFiles": [
     ".env",
     ".adonisrc.json",
-    "resources/views/**/*.edge",
     "resources/js/**",
-    "public/**"
+    {
+      "pattern": "public/**",
+      "reloadServer": false
+    },
+    {
+      "pattern": "resources/views/**/*.edge",
+      "reloadServer": false
+    }
+  ],
+  "aceProviders": [
+    "@adonisjs/repl"
   ]
 }

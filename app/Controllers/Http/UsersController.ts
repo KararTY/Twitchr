@@ -1,7 +1,7 @@
 import Twitch from '@ioc:Adonis/Addons/Twitch'
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import { rules, schema } from '@ioc:Adonis/Core/Validator'
-// import Database from '@ioc:Adonis/Lucid/Database'
+import Database from '@ioc:Adonis/Lucid/Database'
 import BannedUser from 'App/Models/BannedUser'
 import User from 'App/Models/User'
 import { TwitchUsersBody } from 'befriendlier-shared' // For type definitions
@@ -163,10 +163,14 @@ export default class UsersController {
         // Remove all matches to this user.
         // await Database.query().from('matches_lists').where('match_user_id', user.id).delete()
 
+        // Anonymize profile
         profile.bio = 'Hello!'
         profile.favoriteEmotes = []
         profile.color = '#ffffff'
         profile.enabled = false
+        profile.userId = -1
+        profile.createdAt = DateTime.fromJSDate(new Date())
+        // profile.updatedAt automatically changes as soon as we save this.
 
         await profile.save()
       }
@@ -182,7 +186,7 @@ export default class UsersController {
       auth.user.streamerMode = false
       auth.user.host = false
       auth.user.createdAt = DateTime.fromJSDate(new Date())
-      // user.updatedAt automatically changes as soon as we save this.
+      // auth.user.updatedAt automatically changes as soon as we save this.
 
       await auth.user.save()
       await auth.logout()
@@ -250,9 +254,74 @@ export default class UsersController {
     auth.user.updatedAt = DateTime.fromJSDate(new Date())
     await auth.user.save()
 
+    const userData: any = {
+      id: auth.user.id,
+      name: auth.user.name,
+      display_name: auth.user.displayName,
+      twitchID: auth.user.twitchID,
+      avatar: auth.user.avatar,
+      profiles: [],
+      streamer_mode: auth.user.streamerMode,
+      favorite_streamers: [],
+      created_at: auth.user.createdAt.toUTC(),
+      updated_at: auth.user.updatedAt.toUTC(),
+    }
+
     await auth.user.preload('profile')
+
+    for (let index = 0; index < auth.user.profile.length; index++) {
+      const profile = auth.user.profile[index]
+      const profileJSON: any = {
+        ...profile.serialize({
+          fields: ['created_at', 'updated_at', 'id', 'favorite_emotes', 'color', 'bio', 'enabled', 'chat_user_id'],
+        }),
+        matches: [],
+      }
+
+      await profile.preload('matches')
+
+      for (let index = 0; index < profile.matches.length; index++) {
+        const match = profile.matches[index]
+
+        if (match.userId !== -1) {
+          const user = await User.find(match.userId)
+          if (user === null) {
+            continue
+          }
+
+          const hasMatched = await Database.query().from('matches_lists').where({
+            profile_id: match.id,
+            match_user_id: auth.user.id,
+          }).first()
+
+          if (hasMatched === null) {
+            continue
+          }
+
+          profileJSON.matches.push(user.serialize({
+            fields: ['name', 'display_name', 'avatar', 'id'],
+          }))
+        } else {
+          // Deleted match user.
+          profileJSON.matches.push({
+            name: 'Deleted User',
+          })
+        }
+      }
+
+      userData.favorite_streamers.push(profileJSON)
+    }
+
     await auth.user.preload('favoriteStreamers')
 
-    return response.json(auth.user.serialize())
+    for (let index = 0; index < auth.user.favoriteStreamers.length; index++) {
+      const favoriteStreamer = auth.user.favoriteStreamers[index]
+
+      userData.favorite_streamers.push(favoriteStreamer.serialize({
+        fields: ['name', 'display_name', 'avatar', 'id'],
+      }))
+    }
+
+    return response.json(userData)
   }
 }

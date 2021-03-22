@@ -50,5 +50,7 @@ export default class BotLoginController {
 
       return response.redirect('/')
     }
+
+    return response.notFound()
   }
 }

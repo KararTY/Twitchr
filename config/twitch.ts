@@ -4,29 +4,29 @@ const TwitchConfig = {
   /**
    * Twitch client ID token.
    */
-  clientToken: Env.getOrFail('TWITCH_CLIENT_TOKEN') as string,
+  clientToken: Env.get('TWITCH_CLIENT_TOKEN'),
 
   /**
    * Twitch client secret token.
    */
-  clientSecret: Env.getOrFail('TWITCH_CLIENT_SECRET') as string,
+  clientSecret: Env.get('TWITCH_CLIENT_SECRET'),
 
   /**
    * Redirect URI.
    */
-  redirectURI: Env.getOrFail('TWITCH_REDIRECT_URI') as string,
+  redirectURI: Env.get('TWITCH_REDIRECT_URI'),
 
   /**
    * Bot Login Redirect URI.
    */
-  botRedirectURI: Env.getOrFail('TWITCH_BOT_REDIRECT_URI') as string,
+  botRedirectURI: Env.get('TWITCH_BOT_REDIRECT_URI'),
 
   /**
    * Twitch username. Used to make bot join default channel.
    */
   user: {
-    name: Env.getOrFail('TWITCH_BOT_NAME') as string,
-    id: Env.getOrFail('TWITCH_BOT_ID') as string,
+    name: Env.get('TWITCH_BOT_NAME'),
+    id: Env.get('TWITCH_BOT_ID'),
   },
 
   /**

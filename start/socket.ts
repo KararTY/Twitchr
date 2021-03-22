@@ -1,8 +1,8 @@
 import Logger from '@ioc:Adonis/Core/Logger'
-import Ws, { prettySocketInfo } from 'App/Services/Ws'
+import WebSocketServer, { prettySocketInfo } from 'App/Services/Ws'
 import { MessageType } from 'befriendlier-shared'
 
-Ws.start((socket, request) => {
+WebSocketServer.start((socket, request) => {
   request.socket.pause()
 
   const xForwardedFor = request.headers['x-forwarded-for'] as string | undefined
@@ -37,16 +37,17 @@ Ws.start((socket, request) => {
 
   Logger.info(`NEW CONNECTION: [${socket.id}] from ${prettySocketInfo(socket.connection)}.`)
 
-  // eslint-disable-next-line no-void
-  socket.on('message', (msg) => void Ws.queue.add(async () => await Ws.onMessage(socket, msg)))
+  socket.on('message', (msg) =>
+    // eslint-disable-next-line no-void
+    void WebSocketServer.queue.add(async () => await WebSocketServer.onMessage(socket, msg)))
 
-  socket.on('close', (code, reason) => Ws.onClose(socket, code, reason))
+  socket.on('close', (code, reason) => WebSocketServer.onClose(socket, code, reason))
 
-  socket.on('error', (error) => Ws.onError(socket, error))
+  socket.on('error', (error) => WebSocketServer.onError(socket, error))
 
   // https://github.com/websockets/ws#how-to-detect-and-close-broken-connections
-  socket.on('pong', (data) => Ws.heartbeat(socket, data))
+  socket.on('pong', (data) => WebSocketServer.heartbeat(socket, data))
 
   // Send "welcome" to client.
-  socket.send(Ws.socketMessage(MessageType.WELCOME, JSON.stringify('')))
+  socket.send(WebSocketServer.socketMessage(MessageType.WELCOME, JSON.stringify('')))
 })

@@ -6,11 +6,11 @@
     <div class="container">
       <div>
         <div {{{ user.streamer_mode ? 'class="blur" data-blur="updateUser" data-blur-vanish="true" data-blur-text="true"' : '' }}}>
-          @each(profile in profiles.filter(profile => profile.enabled))
+          @each(profile in profiles)
             <a href="{{ route('ProfilesController.read', { params: { id: profile.id } }) }}">
               <div class="card">
                 <div class="card-header">
-                  <div class="card-header-title">
+                  <div class="card-header-title is-clipped">
                     <div class="level is-mobile">
                       <div class="level-left">
                         @if(profile.chat_user_id === 0)
@@ -25,7 +25,7 @@
                               <img src="{{ profile.chat.avatar.replace('300x300', '70x70') }}" alt="{{ profile.chat.name }}'s avatar">
                             </figure>
                           </div>
-                          <p class="level-item">Your profile in {{ profile.chat.display_name }}'s ({{profile.chat.name}}) chat</p>
+                          <p class="level-item">Your profile in {{ profile.chat.display_name }}'s {{profile.chat.display_name.toLowerCase() === profile.chat.name ? '' : profile.chat.name}} chat</p>
                         @endif
                       </div>
                     </div>

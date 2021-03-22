@@ -60,7 +60,7 @@ export default class ProfilesController {
       const userJSON = auth.user.toJSON()
       const profileJSON = profile.toJSON()
 
-      profileJSON.matches = await this.getMatchesList(auth.user, profile)
+      profileJSON.matches = await this.getMatchesList(auth.user, profile, 0)
 
       if (ownProfile) {
         // If own, allow access.
@@ -183,16 +183,32 @@ export default class ProfilesController {
 
     const { id } = params
 
+    const idNumber = Number(id)
+    if (Number.isNaN(idNumber)) {
+      session.flash('message', { error: this.Error.parameterBadRequest })
+      return response.redirect('/profile/')
+    }
+
     await auth.user.preload('profile')
 
-    const profile = auth.user.profile.find(profile => profile.id === id)
+    const profile = auth.user.profile.find(profile => profile.id === idNumber)
     if (profile !== undefined) {
       await profile.related('matches').detach()
 
       // Remove all matches to this profile.
       await Database.query().from('matches_lists').where('match_profile_id', profile.id).delete()
 
-      await profile.delete()
+      // Anonymize profile
+      profile.bio = 'Hello!'
+      profile.favoriteEmotes = []
+      profile.color = '#ffffff'
+      profile.enabled = false
+      profile.userId = -1
+      profile.createdAt = DateTime.fromJSDate(new Date())
+      // profile.updatedAt automatically changes as soon as we save this.
+
+      await profile.save()
+
       session.flash('message', { message: 'Profile has been deleted.' })
     }
 
@@ -335,9 +351,9 @@ export default class ProfilesController {
         }
 
         /**
-           * Make sure user has also matched with us before sending it.
-           * Do not ruin the surprise if they're not matched yet.
-           */
+         * Make sure user has also matched with us before sending it.
+         * Do not ruin the surprise if they're not matched yet.
+         */
 
         // Someone else's, check if the requested profile has matched this requesting user.
         const hasMatched = await Database.query().from('matches_lists').where({
@@ -346,7 +362,7 @@ export default class ProfilesController {
         }).first()
 
         if (hasMatched === null) {
-          return
+          continue
         }
 
         matchesJSON.push({

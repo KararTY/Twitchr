@@ -1,7 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import { DateTime } from 'luxon'
+// import Database from '@ioc:Adonis/Lucid/Database'
 import User from 'App/Models/User'
-import Profile from 'App/Models/Profile'
+import { DateTime } from 'luxon'
 
 let splashLastUpdate = DateTime.fromJSDate(new Date())
 let statistics = {
@@ -38,14 +38,26 @@ export default class SplashController {
       .set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toJSDate()
 
     const countTotalUsers = User.query()
-      .where('created_at', '>', String(DateTime.fromJSDate(new Date('1971')).toSQL())).count('*', 'total').first()
-    const countTotalChannels = User.query().where({ host: true }).count('*', 'total').first()
-
+      .where('createdAt', '>', String(DateTime.fromJSDate(new Date('1971')).toSQL()))
+      .count('*', 'total')
+      .first()
     const countNewUsers = User.query()
       .whereBetween('createdAt', [dateMidnight, new Date()])
       .count('*', 'total')
       .first()
-    const countNewChannels = Profile.query()
+
+    // const countTotalMatches = Database.query()
+    //   .from('matches_lists')
+    //   .countDistinct(['user_id', '' ])
+    // const countNewMatches = Database.query()
+    //   .from('matches_lists')
+
+    const countTotalChannels = User.query()
+      .where({ host: true })
+      .count('*', 'total')
+      .first()
+    const countNewChannels = User.query()
+      .where({ host: true })
       .whereBetween('createdAt', [dateMidnight, new Date()])
       .count('*', 'total')
       .first()

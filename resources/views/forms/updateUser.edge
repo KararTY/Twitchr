@@ -137,18 +137,14 @@
       <div class="field is-horizontal">
         <div class="field-label"></div>
         <div class="field-body">
-          <div class="field is-grouped">
-            <div class="control">
-              {{ csrfField() }}
+          <div class="field">
+            {{ csrfField() }}
+            <div class="buttons">
               <button class="button is-success" type="submit" data-name="submitBtn">Update</button>
-            </div>
-            <div class="control">
               <button title="You must not have recently updated your account details to be able to download this data: It can only be requested every 1 hour." type="submit" formaction="/user/data" class="button">
                 <span class="icon">{{{ icon('database', 'small') }}}</span>
                 <span>My data</span>
               </button>
-            </div>
-            <div class="control">
               <button type="submit" formaction="/user/delete" class="button is-danger">
                 <span class="icon">{{{ icon('trash', 'small') }}}</span>
                 <span>Delete account</span>

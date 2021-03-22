@@ -22,8 +22,19 @@ export default class AuthMiddleware {
    * of the mentioned guards and that guard will be used by the rest of the code
    * during the current request.
    */
-  protected async authenticate ({ request, auth, session }: HttpContextContract, guards: string[]) {
+  protected async authenticate ({ request, auth, session }: HttpContextContract, guards: any[]) {
+    /**
+     * Hold reference to the guard last attempted within the for loop. We pass
+     * the reference of the guard to the "AuthenticationException", so that
+     * it can decide the correct response behavior based upon the guard
+     * driver
+     */
+    let guardLastAttempted: string | undefined
+
     for (const guard of guards) {
+      guardLastAttempted = guard
+
+      // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
       if (await auth.use(guard).check()) {
         /**
          * Instruct auth to use the given guard as the default guard for
@@ -46,6 +57,7 @@ export default class AuthMiddleware {
     throw new AuthenticationException(
       'Unauthorized access',
       'E_UNAUTHORIZED_ACCESS',
+      guardLastAttempted,
       this.redirectTo,
     )
   }
@@ -53,13 +65,12 @@ export default class AuthMiddleware {
   /**
    * Handle request
    */
-  public async handle (ctx: HttpContextContract,
-    next: () => Promise<void>, customGuards: string[]) {
+  public async handle (ctx: HttpContextContract, next: () => Promise<void>, customGuards: string[]) {
     /**
      * Uses the user defined guards or the default guard mentioned in
      * the config file
      */
-    const guards = customGuards.length === 0 ? customGuards : [ctx.auth.name]
+    const guards = customGuards.length > 0 ? customGuards : [ctx.auth.name]
     await this.authenticate(ctx, guards)
     await next()
   }

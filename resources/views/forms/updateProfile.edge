@@ -79,7 +79,7 @@
               {{ csrfField() }}
               <button class="button is-success" type="submit" data-name="submitBtn">Update</button>
             </div>
-            @if(!profile.chat_user_id === 0)
+            @if(profile.chat_user_id !== 0)
               <div class="control">
                 <button type="submit" formaction="/profile/{{ profile.id }}/delete" class="button is-danger">
                   <span class="icon">{{{ icon('trash', 'small') }}}</span>
